@@ -24,7 +24,7 @@ $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 <html>
 <head>
 <meta charset="UTF-8">
-<title>パスワード変更</title>
+<title>社員資格登録管理</title>
 <script type="text/javascript">
 function submitChk()
 {

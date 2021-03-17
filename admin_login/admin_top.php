@@ -16,7 +16,7 @@ if (isset($_SESSION['admin_login'])==false) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ろくまる農園</title>
+<title>社員資格登録管理</title>
 </head>
 <body>
 
