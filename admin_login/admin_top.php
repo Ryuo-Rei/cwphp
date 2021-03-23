@@ -16,15 +16,13 @@ if (isset($_SESSION['admin_login'])==false) {
 <html>
 <head>
 <meta charset="UTF-8">
-<title>ろくまる農園</title>
+<title>社員資格登録管理</title>
 </head>
 <body>
 
 管理メニュー<br />
 <br />
-<a href="admin_maintenance.php">社員メンテナンス</a><br />
-<br />
-<a href="admin_information.php">社員資格情報</a><br />
+<a href="admin_maintenance.php">社員一覧</a><br />
 <br />
 <a href="admin_logout.php">ログアウト</a><br />
 

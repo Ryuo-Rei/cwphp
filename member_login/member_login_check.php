@@ -1,5 +1,4 @@
 <?php
-
 try {
     require_once('../common/common.php');
 
@@ -8,26 +7,37 @@ try {
     $login_id=$post['id'];
     $login_pass=$post['pass'];
 
-    $hashed_pass=hash_password($login_pass);
+    $hashed_pass=password_hash($login_pass, PASSWORD_DEFAULT);
 
-    $dsn = 'mysql:dbname=heroku_570d4cd36643e90;host=us-cdbr-east-03.cleardb.com;charset=utf8';
-    $user = 'b69dbd841cab77';
-    $password = '542709fe';
-    $dbh = new PDO($dsn, $user, $password);
+    $conn = mysqli_init();
+    mysqli_ssl_set($conn, null, null, "../BaltimoreCyberTrustRoot.crt.pem", null, null);
+    mysqli_real_connect($conn, 'cwphpmysql.mysql.database.azure.com', 'cwphpdb_test@cwphpmysql.mysql.database.azure.com', 'msPJRGsq7uKTUiksLXamW9pu7MrgULrzkhu2SipCl1ix4mvN4htBQh3Ya5FNEmft', 'testdb', 3306, MYSQLI_CLIENT_SSL);
+    if (mysqli_connect_errno($conn)) {
+        die('Failed to connect to MySQL: '.mysqli_connect_error());
+    }
+
+    $dsn = 'mysql:host=cwphpmysql.mysql.database.azure.com;port=3306;dbname=testdb';
+    $user = 'cwphpdb_test@cwphpmysql.mysql.database.azure.com';
+    $password = 'msPJRGsq7uKTUiksLXamW9pu7MrgULrzkhu2SipCl1ix4mvN4htBQh3Ya5FNEmft';
+    $options = array(
+    PDO::MYSQL_ATTR_SSL_CA => '../BaltimoreCyberTrustRoot.crt.pem'
+    );
+    $dbh = new PDO($dsn, $user, $password, $options);
     $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    $sql = 'SELECT * FROM employee WHERE email=?';
+    $sql = 'SELECT * FROM employee WHERE email=? AND delete_flag=?';
     $stmt= $dbh->prepare($sql);
     $data[]=$login_id;
+    $data[]=0;
     $stmt->execute($data);
     
     $rec = $stmt->fetch(PDO::FETCH_ASSOC);
     
-    if ($hashed_pass != $rec['password'] || $rec == false) {
+    if (password_verify($login_pass, rec['password']) == false || $rec == false) {
         print 'ログインできませんでした。<br />';
         print '<a href="member_login.html">戻る</a>';
         if ($rec == false) {
-            $sql= 'INSERT INTO login_info(date,status,login_id,ip_address,browser_info) VALUES(?,?,?,?,?)';
+            $sql= 'INSERT INTO login_info(login_date,status,login_id,ip_address,browser_info) VALUES(?,?,?,?,?)';
             $stmt= $dbh->prepare($sql);
             $data=[];
             $data[]=date("Y/m/d H:i:s");
@@ -38,8 +48,8 @@ try {
             $stmt->execute($data);
     
             $dbh = null;
-        } else if ($hashed_pass != $rec['password']) {
-            $sql= 'INSERT INTO login_info(date,status,login_id,ip_address,browser_info) VALUES(?,?,?,?,?)';
+        } elseif (password_verify($login_pass, rec['password']) == false) {
+            $sql= 'INSERT INTO login_info(login_date,status,login_id,ip_address,browser_info) VALUES(?,?,?,?,?)';
             $stmt= $dbh->prepare($sql);
             $data=[];
             $data[]=date("Y/m/d H:i:s");
@@ -53,7 +63,7 @@ try {
         }
     } else {
         session_start();
-        $sql= 'INSERT INTO login_info(date,status,login_id,ip_address,browser_info) VALUES(?,?,?,?,?)';
+        $sql= 'INSERT INTO login_info(login_date,status,login_id,ip_address,browser_info) VALUES(?,?,?,?,?)';
         $stmt= $dbh->prepare($sql);
         $data=[];
         $data[]=date("Y/m/d H:i:s");
@@ -66,7 +76,10 @@ try {
         $dbh = null;
 
         $_SESSION['member_login']=1;
-        $_SESSION['user_info']=array($rec['id'], $rec['emp_number'], $rec['last_name']." ".$rec['first_name'], $login_id);
+        $_SESSION['user_info']=array($rec['id'],
+        $rec['emp_number'],
+        $rec['last_name']." ".$rec['first_name'],
+        $login_id);
         header('Location:member_top.php');
         exit();
     }
