@@ -24,14 +24,23 @@ if (isset($_SESSION['member_login'])==false) {
 
 try {
     require_once('../common/common.php');
-    $hashed_oldpass=hash_password($_SESSION['old_password']);
-    $hashed_newpass=hash_password($_SESSION['new_password']);
-    var_dump($hashed_oldpass);
+    $hashed_oldpass=$_POST['current_pass'];
+    $hashed_newpass=password_hash($_POST['new_pass1'], PASSWORD_DEFAULT);
     
-    $dsn = 'mysql:dbname=heroku_570d4cd36643e90;host=us-cdbr-east-03.cleardb.com;charset=utf8';
-    $user = 'b69dbd841cab77';
-    $password = '542709fe';
-    $dbh = new PDO($dsn, $user, $password);
+    $conn = mysqli_init();
+    mysqli_ssl_set($conn, null, null, "../BaltimoreCyberTrustRoot.crt.pem", null, null);
+    mysqli_real_connect($conn, 'cwphpmysql.mysql.database.azure.com', 'cwphpdb_test@cwphpmysql.mysql.database.azure.com', 'msPJRGsq7uKTUiksLXamW9pu7MrgULrzkhu2SipCl1ix4mvN4htBQh3Ya5FNEmft', 'testdb', 3306, MYSQLI_CLIENT_SSL);
+    if (mysqli_connect_errno($conn)) {
+        die('Failed to connect to MySQL: '.mysqli_connect_error());
+    }
+
+    $dsn = 'mysql:host=cwphpmysql.mysql.database.azure.com;port=3306;dbname=testdb';
+    $user = 'cwphpdb_test@cwphpmysql.mysql.database.azure.com';
+    $password = 'msPJRGsq7uKTUiksLXamW9pu7MrgULrzkhu2SipCl1ix4mvN4htBQh3Ya5FNEmft';
+    $options = array(
+    PDO::MYSQL_ATTR_SSL_CA => '../BaltimoreCyberTrustRoot.crt.pem'
+    );
+    $dbh = new PDO($dsn, $user, $password, $options);
     $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     $sql = 'SELECT password FROM employee WHERE id=?';
@@ -40,11 +49,10 @@ try {
     $stmt->execute($data);
     
     $rec = $stmt->fetch(PDO::FETCH_ASSOC);
-    var_dump($rec['password']);
-    var_dump(password_verify($_SESSION['old_password'], $rec['password']));
-    if (password_verify($_SESSION['old_password'], $rec['password'])) {
+    if (password_verify($hashed_oldpass, rec['password'])) {
         $sql = 'UPDATE employee SET password=? WHERE id=?';
         $stmt = $dbh->prepare($sql);
+        $data = [];
         $data[] = $hashed_newpass;
         $data[] = $_SESSION['user_info'][0];
         $stmt->execute($data);

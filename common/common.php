@@ -7,9 +7,3 @@ function sanitize($before)
     }
     return $after;
 }
-
-function hash_password($password)
-{
-    $hashed_password = hash('sha256', $password);
-    return $hashed_password;
-}

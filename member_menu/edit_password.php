@@ -12,10 +12,20 @@ if (isset($_SESSION['member_login'])==false) {
     print '<br />';
 }
 
-$dsn = 'mysql:dbname=heroku_570d4cd36643e90;host=us-cdbr-east-03.cleardb.com;charset=utf8';
-$user = 'b69dbd841cab77';
-$password = '542709fe';
-$dbh = new PDO($dsn, $user, $password);
+$conn = mysqli_init();
+mysqli_ssl_set($conn, null, null, "../BaltimoreCyberTrustRoot.crt.pem", null, null);
+mysqli_real_connect($conn, 'cwphpmysql.mysql.database.azure.com', 'cwphpdb_test@cwphpmysql.mysql.database.azure.com', 'msPJRGsq7uKTUiksLXamW9pu7MrgULrzkhu2SipCl1ix4mvN4htBQh3Ya5FNEmft', 'testdb', 3306, MYSQLI_CLIENT_SSL);
+if (mysqli_connect_errno($conn)) {
+    die('Failed to connect to MySQL: '.mysqli_connect_error());
+}
+
+$dsn = 'mysql:host=cwphpmysql.mysql.database.azure.com;port=3306;dbname=testdb';
+$user = 'cwphpdb_test@cwphpmysql.mysql.database.azure.com';
+$password = 'msPJRGsq7uKTUiksLXamW9pu7MrgULrzkhu2SipCl1ix4mvN4htBQh3Ya5FNEmft';
+$options = array(
+PDO::MYSQL_ATTR_SSL_CA => '../BaltimoreCyberTrustRoot.crt.pem'
+);
+$dbh = new PDO($dsn, $user, $password, $options);
 $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 ?>
@@ -25,7 +35,7 @@ $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 <head>
 <meta charset="UTF-8">
 <title>社員資格登録管理</title>
-<script type="text/javascript">
+<script type="text/javascript"> 
 function submitChk()
 {
     if(pass_form.current_pass.value == "")
@@ -78,7 +88,7 @@ function submitChk()
     }
     if(count < 2)
     {
-        alert("パスワードには半角英数字記号のうち2種類を含めてください。");
+        alert("パスワードには半角英数字記号のうち2種類以上を含めてください。");
         return false;
     }
     var flag = confirm("変更してもよろしいですか？");
@@ -88,13 +98,6 @@ function submitChk()
 </script>                   
 </head>
 <body>
-
-<?php
-
-$_SESSION['old_password'] = pass_form.current_pass.value;
-$_SESSION['new_password'] = pass_form.new_pass1.value;
-
-?>
 
 <br />
 <form method="post" action="edit_password_done.php" name="pass_form">
